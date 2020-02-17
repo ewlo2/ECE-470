@@ -5,13 +5,13 @@ Coppelia Simulation of UR3 Robot Arm with Python
 Installed CoppeliaSim and Python 3.7
 Set up remote API for Python by copying:
 
-*sim.py
+[*sim.py*](VREP SIM/sim.py)
 
-simConst.py
+[*simConst.py*](VREP SIM/simConst.py)
 
-remoteApi.dll*
+[*remoteApi.dll*](VREP SIM/remoteApi.dll)
 
-from Coppelia lib folder to workspace where Coppelia Scene is located (named Test1.py).
+from Coppelia lib folder to workspace where Coppelia Scene is located (named [Test1.py](VREP SIM/Test1.py)).
 
 ## Python Code Overview
 Lines 7-21: Import necessary libraries
