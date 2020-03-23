@@ -1,4 +1,4 @@
-# ECE 470 SP19 - Introduction to Robotics 
+# ECE 470 SP20 - Introduction to Robotics 
 Coppelia Simulation of UR3 Robot Arm with Python
 
 ## Project Update 1
