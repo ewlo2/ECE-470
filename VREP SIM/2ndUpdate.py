@@ -26,6 +26,7 @@ import math
 import matplotlib.pyplot as mpl
 import time
 
+
 #Function for retrieving joint center positions relative to base
 #Returns lists of positions for all three axis
 def get_jointPos():
@@ -46,6 +47,16 @@ def get_endPos():
     z = position[2]
     
     return x, y, z
+
+#Returns Orientation of End Effector
+def get_endAng():
+    returnCode, eulerAngles = sim.simxGetObjectOrientation(clientID, endHandle, baseHandle, sim.simx_opmode_blocking)
+    alpha = eulerAngles[0]
+    beta = eulerAngles[1]
+    gamma = eulerAngles[2]
+    
+    return alpha, beta, gamma
+
 #Returns the skew of a vector
 def toSkew(x):
     skew = np.array([[0, -x[2][0], x[1][0]],
@@ -69,7 +80,7 @@ def screw():
                 [-1,0,0],
                 [-1,0,0],
                 [0,0,1],
-                [-1,0,0]])
+                [1,0,0]])
     S = []
     x,y,z = get_jointPos()
     
@@ -104,12 +115,12 @@ def transformation(S,M,thetas):
     T = np.identity(4)
     
     for i in range(len(thetas)):
-        print("expm" + str(i))
-        print(screwToMatrix(S[i])*thetas[i])
+#        print("expm" + str(i))
+#        print(screwToMatrix(S[i])*thetas[i])
         T = np.matmul(T,sl.expm(screwToMatrix(S[i])*thetas[i]))
         
-        print("T" + str(i))
-        print(T)
+#        print("T" + str(i))
+#        print(T)
     T = np.matmul(T,M)
     return T
 
@@ -129,7 +140,7 @@ def rotToEuler(R):
     
     
     if not (sy < 1e-6):
-        xAngle = math.atan2(R32,R33)
+        xAngle = math.atan2(R32,R33)    
         yAngle = math.atan2(-R31,sy)
         zAngle = math.atan2(R21, R11)
     else:
@@ -149,8 +160,8 @@ def movePose(T, clientID, objectHandle):
         print(eulerAng)
         print("position:")
         print(P)
-        sim.simxSetObjectPosition(clientID,objectHandle, -1, P, sim.simx_opmode_oneshot)
-        sim.simxSetObjectOrientation(clientID, objectHandle, -1, eulerAng, sim.simx_opmode_oneshot)
+        sim.simxSetObjectPosition(clientID,objectHandle, baseHandle, P, sim.simx_opmode_oneshot)
+        sim.simxSetObjectOrientation(clientID, objectHandle, baseHandle, eulerAng, sim.simx_opmode_oneshot)
         
         
         
@@ -178,7 +189,7 @@ else:
 returnCode, baseHandle = sim.simxGetObjectHandle(clientID,'UR3_link1_visible', sim.simx_opmode_blocking)
 
 #Retrieve End Effector Handle
-returnCode, endHandle = sim.simxGetObjectHandle(clientID,'UR3_link7_visible', sim.simx_opmode_blocking)
+returnCode, endHandle = sim.simxGetObjectHandle(clientID,'UR3_connection', sim.simx_opmode_blocking)
 
 #Retrieve joint handles
     
@@ -210,7 +221,7 @@ sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot)
 zero = [0*math.pi/180,0*math.pi/180,0*math.pi/180,0*math.pi/180,0*math.pi/180,0*math.pi/180]
 time.sleep(1)
 S = screw()
-print(S)
+#print(S)
 M = zeroConfig(zero)
 print(M)
 T = transformation(S,M,zero)
@@ -225,22 +236,26 @@ for i in range(jointNum):
     returnCode = sim.simxSetJointTargetPosition(clientID, jointHandle[i], zero[i],sim.simx_opmode_oneshot)
     time.sleep(0.5)
 
-    
-#First Postion
-targetPos1 = [90*math.pi/180,90*math.pi/180,-90*math.pi/180,90*math.pi/180,90*math.pi/180,90*math.pi/180]
-T = transformation(S,M,targetPos1)
-
-
-#Move reference frame to first position
-movePose(T,clientID,refHandle)
-time.sleep(2)
-
-#Move joints to position
-for i in range(jointNum):
-    returnCode = sim.simxSetJointTargetPosition(clientID, jointHandle[i], targetPos1[i],sim.simx_opmode_oneshot)
-    time.sleep(0.5)
-time.sleep(10)
-
+#    
+##First Postion
+#targetPos1 = [90*math.pi/180,90*math.pi/180,-90*math.pi/180,90*math.pi/180,90*math.pi/180,90*math.pi/180]
+#T = transformation(S,M,targetPos1)
+#
+#
+##Move reference frame to first position
+#movePose(T,clientID,refHandle)
+#time.sleep(2)
+#
+##Move joints to position
+#for i in range(jointNum):
+#    returnCode = sim.simxSetJointTargetPosition(clientID, jointHandle[i], targetPos1[i],sim.simx_opmode_oneshot)
+#    time.sleep(0.5)
+#print("Actual Pos1: ")
+#print(get_endPos())
+#print("Actual Ang1: ")
+#print(get_endAng())
+#time.sleep(10)
+#
 #Second Postion
 targetPos2 = [-90*math.pi/180,45*math.pi/180,-90*math.pi/180,90*math.pi/180,90*math.pi/180,90*math.pi/180]
 T = transformation(S,M,targetPos2)
@@ -254,6 +269,28 @@ time.sleep(2)
 for i in range(jointNum):
     returnCode = sim.simxSetJointTargetPosition(clientID, jointHandle[i], targetPos2[i],sim.simx_opmode_oneshot)
     time.sleep(0.5)
+print("Actual Pos2: ")
+print(get_endPos())
+print("Actual Ang2: ")
+print(get_endAng())
+time.sleep(10)
+
+thetaik = [-1.5715412186172628, -0.6522139987009226, 1.571401230156468, -0.13185144974709573, 1.570737634968232, -1.5716190259658518]
+T = transformation(S,M,thetaik)
+
+
+#Move reference frame to first position
+movePose(T,clientID,refHandle)
+time.sleep(2)
+
+#Move joints to position
+for i in range(jointNum):
+    returnCode = sim.simxSetJointTargetPosition(clientID, jointHandle[i], thetaik[i],sim.simx_opmode_oneshot)
+    time.sleep(0.5)
+print("Actual Posik: ")
+print(get_endPos())
+print("Actual Angik: ")
+print(get_endAng())
 time.sleep(10)
 
 
